@@ -2,11 +2,15 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" 
         xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
         layout:decorator="layout/default">
- 
 <head>
     <title>Form</title>
     <th:block layout:fragment="contentsCss">
     </th:block>
+    <link rel='stylesheet' th:href='@{/webjars/bootstrap/3.4.1/css/bootstrap.min.css}'>
+	<script type="text/javascript" th:src="@{/webjars/jquery/3.3.1/jquery.min.js}"></script>
+	<script type="text/javascript" th:src="@{/webjars/bootstrap/3.4.1/js/bootstrap.min.js}"></script>
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 
 <body>
@@ -75,6 +79,8 @@
     <th:block layout:fragment="customScript">
         <!-- 신규 등록 -->
         <script th:if="!${board?.idx}">
+	        var header = $("meta[name='_csrf_header']").attr('content');
+	        var token = $("meta[name='_csrf']").attr('content');
             // 저장버튼
             $("#insert").click(function() {
                 var jsonData = JSON.stringify({
@@ -87,6 +93,9 @@
                     data : jsonData,
                     contentType : "application/json",
                     dataType : "json",
+                    beforeSend : function(xhr) {
+                    	xhr.setRequestHeader(header, token)
+                    },
                     success : function() {
                         alert("저장 성공!");
                         location.href = "/board/list";
@@ -100,6 +109,8 @@
         
         <!-- 수정/삭제 -->
         <script th:if="${board?.idx}">
+	        var header = $("meta[name='_csrf_header']").attr('content');
+	        var token = $("meta[name='_csrf']").attr('content');
             // 수정버튼
             $("#update").click(function() {
                 var jsonData = JSON.stringify({
@@ -112,12 +123,16 @@
                     data : jsonData,
                     contentType : "application/json",
                     dataType : "json",
+                    beforeSend : function(xhr) {
+                    	xhr.setRequestHeader(header, token)
+                    },
                     success : function() {
                         alert("수정 성공!");
                         location.href = "/board/list";
                     },
-                    error : function() {
-                        alert("수정 실패!");
+                    error : function(request, error) {
+                        // alert("수정 실패!");
+                    	alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
                     }
                 });
             });
@@ -127,6 +142,9 @@
                 $.ajax({
                     url : "http://localhost:8080/board/" + $("#board_idx").val(),
                     type : "DELETE",
+                    beforeSend : function(xhr) {
+                    	xhr.setRequestHeader(header, token)
+                    },
                     success : function() {
                         alert("삭제 성공!");
                         location.href = "/board/list";
